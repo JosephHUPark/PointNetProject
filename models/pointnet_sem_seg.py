@@ -38,7 +38,7 @@ class get_loss(torch.nn.Module):
         self.mat_diff_loss_scale = mat_diff_loss_scale
 
     def forward(self, pred, target, trans_feat, weight):
-        loss = F.nll_loss(pred, target, weight = weight)
+        loss = F.cross_entropy(pred, target, weight = weight)
         mat_diff_loss = feature_transform_reguliarzer(trans_feat)
         total_loss = loss + mat_diff_loss * self.mat_diff_loss_scale
         return total_loss
