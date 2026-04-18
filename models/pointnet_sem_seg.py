@@ -26,7 +26,9 @@ class get_model(nn.Module):
         n_pts = x.size()[2]
         x, trans, trans_feat = self.feat(x)
         x = F.relu(self.bn1(self.conv1(x)))
+        res = x
         x = self.dp1(F.relu(self.bn2(self.conv2(x))))
+        x = x + res
         x = self.dp2(F.relu(self.bn3(self.conv3(x))))
         x = self.conv4(x)
         x = x.transpose(2,1).contiguous()
