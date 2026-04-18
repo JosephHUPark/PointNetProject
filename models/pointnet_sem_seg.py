@@ -18,14 +18,16 @@ class get_model(nn.Module):
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)
+        self.dp1 = nn.Dropout(p=0.3)
+        self.dp2 = nn.Dropout(p=0.3)
 
     def forward(self, x):
         batchsize = x.size()[0]
         n_pts = x.size()[2]
         x, trans, trans_feat = self.feat(x)
         x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
+        x = self.dp1(F.relu(self.bn2(self.conv2(x))))
+        x = self.dp2(F.relu(self.bn3(self.conv3(x))))
         x = self.conv4(x)
         x = x.transpose(2,1).contiguous()
         x = x.view(batchsize, n_pts, self.k)
