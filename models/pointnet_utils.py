@@ -75,7 +75,7 @@ class STNkd(nn.Module):
         x = F.relu(self.bn5(self.fc2(x)))
         x = self.fc3(x)
 
-        iden = Variable(torch.from_numpy(np.eye(self.k).flatten().astype(np.float32))).view(1, self.k * self.k).repeat(
+        iden = torch.from_numpy(np.eye(self.k).flatten()).float().view(1, self.k * self.k).repeat(
             batchsize, 1)
         if x.is_cuda:
             iden = iden.cuda()
