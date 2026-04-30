@@ -11,7 +11,7 @@ class get_model(nn.Module):
         super(get_model, self).__init__()
         self.k = num_class
         self.feat = PointNetEncoder(global_feat=False, feature_transform=True, channel=9)
-        self.conv1 = torch.nn.Conv1d(1088, 512, 1)
+        self.conv1 = torch.nn.Conv1d(2112, 512, 1)
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
         self.conv4 = torch.nn.Conv1d(128, self.k, 1)
