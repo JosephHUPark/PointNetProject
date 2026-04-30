@@ -33,15 +33,15 @@ class get_model(nn.Module):
         self.res_conv = nn.Conv1d(512, 256, 1)
 
     def forward(self, x):
-        x, trans, trans_feat = self.feat(x)
-        x = x.transpose(1, 2)
-        
-        x = self.transformer(x).transpose(1, 2)
-        
         batchsize = x.size()[0]
         n_pts = x.size()[2]
     
         x, trans, trans_feat = self.feat(x)
+    
+        x = x.transpose(1, 2)
+        x = self.transformer(x)
+        x = x.transpose(1, 2)
+
         x = F.relu(self.bn1(self.conv1(x)))   # [B,512,N]
     
         res = self.res_conv(x)                # [B,256,N]
