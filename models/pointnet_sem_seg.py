@@ -11,6 +11,15 @@ class get_model(nn.Module):
         super(get_model, self).__init__()
         self.k = num_class
         self.feat = PointNetEncoder(global_feat=False, feature_transform=True, channel=9)
+        self.transformer = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(
+                d_model=2112,
+                nhead=8,
+                dim_feedforward=512,
+                batch_first=True
+            ),
+            num_layers=2
+        ) # will add a lot of time
         self.conv1 = torch.nn.Conv1d(2112, 512, 1)
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
@@ -24,6 +33,11 @@ class get_model(nn.Module):
         self.res_conv = nn.Conv1d(512, 256, 1)
 
     def forward(self, x):
+        x, trans, trans_feat = self.feat(x)
+        x = x.transpose(1, 2)
+        
+        x = self.transformer(x).transpose(1, 2)
+        
         batchsize = x.size()[0]
         n_pts = x.size()[2]
     
