@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.parallel
-import torch.utils.data
 import torch.nn.functional as F
 from pointnet_utils import PointNetEncoder, feature_transform_reguliarzer
 
@@ -65,24 +63,24 @@ class get_model(nn.Module):
         return x, trans_feat
 
 def farthest_point_sampling(x, npoint):
-    B, C, N = x.shape
+    B, _, N = x.shape
     device = x.device
 
-    xyz = x[:, :3, :].transpose(1, 2).contiguous()  # [B, N, 3]
+    xyz = x.transpose(1, 2).contiguous()  # [B, N, 3]
 
     centroids = torch.zeros(B, npoint, dtype=torch.long, device=device)
     distance = torch.ones(B, N, device=device) * 1e10
 
-    farthest = torch.randint(0, N, (B,), dtype=torch.long, device=device)
+    farthest = torch.randint(0, N, (B,), device=device)
 
     batch_indices = torch.arange(B, device=device)
 
     for i in range(npoint):
         centroids[:, i] = farthest
 
-        centroid_xyz = xyz[batch_indices, farthest, :].view(B, 1, 3)
+        centroid = xyz[batch_indices, farthest].view(B, 1, 3)
 
-        dist = torch.sum((xyz - centroid_xyz) ** 2, dim=-1)  # [B, N]
+        dist = torch.sum((xyz - centroid) ** 2, dim=-1)
 
         mask = dist < distance
         distance[mask] = dist[mask]
