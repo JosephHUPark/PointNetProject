@@ -35,19 +35,22 @@ class get_model(nn.Module):
     def forward(self, x):
         batchsize = x.size()[0]
         n_pts = x.size()[2]
-    
-        x, trans, trans_feat = self.feat(x)
-        S = 1024
-        idx = farthest_point_sampling(x, S) 
 
-        B, C, N = x.shape
-        batch_indices = torch.arange(B, device=x.device).view(B, 1).repeat(1, S)
+        xyz_input = x
+
+        x, trans, trans_feat = self.feat(x)
         
-        x = x[batch_indices, :, idx]
-    
+        idx = farthest_point_sampling(xyz_input, 1024)
+        
+        B, C, N = x.shape
+        idx_expand = idx.unsqueeze(1).expand(-1, C, -1)
+        x = torch.gather(x, 2, idx_expand)
+        
         x = x.transpose(1, 2)
         x = self.transformer(x)
         x = x.transpose(1, 2)
+        
+        B, C, S = x.shape
 
         x = F.relu(self.bn1(self.conv1(x)))   # [B,512,N]
     
