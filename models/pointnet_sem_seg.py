@@ -37,6 +37,13 @@ class get_model(nn.Module):
         n_pts = x.size()[2]
     
         x, trans, trans_feat = self.feat(x)
+        S = 1024
+        idx = farthest_point_sampling(x, S) 
+
+        B, C, N = x.shape
+        batch_indices = torch.arange(B, device=x.device).view(B, 1).repeat(1, S)
+        
+        x = x[batch_indices, :, idx]
     
         x = x.transpose(1, 2)
         x = self.transformer(x)
@@ -57,6 +64,33 @@ class get_model(nn.Module):
         x = x.view(batchsize, n_pts, self.k)
     
         return x, trans_feat
+
+def farthest_point_sampling(x, npoint):
+    B, C, N = x.shape
+    device = x.device
+
+    xyz = x[:, :3, :].transpose(1, 2).contiguous()  # [B, N, 3]
+
+    centroids = torch.zeros(B, npoint, dtype=torch.long, device=device)
+    distance = torch.ones(B, N, device=device) * 1e10
+
+    farthest = torch.randint(0, N, (B,), dtype=torch.long, device=device)
+
+    batch_indices = torch.arange(B, device=device)
+
+    for i in range(npoint):
+        centroids[:, i] = farthest
+
+        centroid_xyz = xyz[batch_indices, farthest, :].view(B, 1, 3)
+
+        dist = torch.sum((xyz - centroid_xyz) ** 2, dim=-1)  # [B, N]
+
+        mask = dist < distance
+        distance[mask] = dist[mask]
+
+        farthest = torch.max(distance, dim=1)[1]
+
+    return centroids
 
 class get_loss(torch.nn.Module):
     def __init__(self, mat_diff_loss_scale=0.001):
