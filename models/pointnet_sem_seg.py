@@ -33,41 +33,35 @@ class get_model(nn.Module):
         self.res_conv = nn.Conv1d(512, 256, 1)
 
     def forward(self, x):
-        batchsize = x.size()[0]
-        n_pts = x.size()[2]
+        B, _, N = x.shape
 
-        xyz_input = x
+        xyz = x  # keep raw coordinates
 
-        x, trans, trans_feat = self.feat(x)
-        
-        idx = farthest_point_sampling(xyz_input, 1024)
-        
-        B, C, N = x.shape
         S = 1024
-        
-        idx_expand = idx.unsqueeze(1).expand(-1, C, -1)
-        x = torch.gather(x, 2, idx_expand)
-        
-        x = x.transpose(1, 2)
+        idx = farthest_point_sampling(xyz, S)  # [B, S]
+
+        x = x[:, :, idx]  # [B, 3, S]
+        x, trans, trans_feat = self.feat(x)  # [B, 2112, S]
+
+        x = x.transpose(1, 2)  # [B, S, C]
         x = self.transformer(x)
-        x = x.transpose(1, 2)
+        x = x.transpose(1, 2)  # [B, C, S]
         
-        B, C, S = x.shape   # IMPORTANT FIX
-        
-        x = F.relu(self.bn1(self.conv1(x)))
-        res = self.res_conv(x)
-        
-        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn1(self.conv1(x)))   # [B,512,S]
+
+        res = self.res_conv(x)                # [B,256,S]
+
+        x = F.relu(self.bn2(self.conv2(x)))   # [B,256,S]
         x = self.dp1(x)
         x = x + res
-        
-        x = F.relu(self.bn3(self.conv3(x)))
+
+        x = F.relu(self.bn3(self.conv3(x)))   # [B,128,S]
         x = self.dp2(x)
-        x = self.conv4(x)
-        
-        x = x.transpose(2,1).contiguous()
-        x = x.view(B, S, self.k)
-    
+
+        x = self.conv4(x)                     # [B,K,S]
+
+        x = x.transpose(2, 1).contiguous()    # [B,S,K]
+
         return x, trans_feat
 
 def farthest_point_sampling(x, npoint):
