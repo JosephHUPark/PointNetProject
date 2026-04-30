@@ -43,6 +43,8 @@ class get_model(nn.Module):
         idx = farthest_point_sampling(xyz_input, 1024)
         
         B, C, N = x.shape
+        S = 1024
+        
         idx_expand = idx.unsqueeze(1).expand(-1, C, -1)
         x = torch.gather(x, 2, idx_expand)
         
@@ -50,21 +52,21 @@ class get_model(nn.Module):
         x = self.transformer(x)
         x = x.transpose(1, 2)
         
-        B, C, S = x.shape
-
-        x = F.relu(self.bn1(self.conv1(x)))   # [B,512,N]
-    
-        res = self.res_conv(x)                # [B,256,N]
-        x = F.relu(self.bn2(self.conv2(x)))   # [B,256,N]
+        B, C, S = x.shape   # IMPORTANT FIX
+        
+        x = F.relu(self.bn1(self.conv1(x)))
+        res = self.res_conv(x)
+        
+        x = F.relu(self.bn2(self.conv2(x)))
         x = self.dp1(x)
         x = x + res
-    
-        x = F.relu(self.bn3(self.conv3(x)))   # [B,128,N]
+        
+        x = F.relu(self.bn3(self.conv3(x)))
         x = self.dp2(x)
         x = self.conv4(x)
-    
+        
         x = x.transpose(2,1).contiguous()
-        x = x.view(batchsize, n_pts, self.k)
+        x = x.view(B, S, self.k)
     
         return x, trans_feat
 
