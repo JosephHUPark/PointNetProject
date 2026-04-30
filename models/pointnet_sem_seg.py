@@ -39,6 +39,7 @@ class get_model(nn.Module):
         S = 1024
         idx = farthest_point_sampling(xyz, S)  # [B, S]
 
+        # FPS sampling
         x = x[:, :, idx]  # [B, 3, S]
         x, trans, trans_feat = self.feat(x)  # [B, 2112, S]
 
