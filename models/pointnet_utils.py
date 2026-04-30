@@ -65,6 +65,11 @@ class STNkd(nn.Module):
         self.bn4 = nn.BatchNorm1d(512)
         self.bn5 = nn.BatchNorm1d(256)
 
+        self.register_buffer(
+            "iden_k",
+            torch.eye(self.k).view(1, self.k * self.k)
+        )
+
         self.k = k
 
     def forward(self, x):
@@ -79,8 +84,7 @@ class STNkd(nn.Module):
         x = F.relu(self.bn5(self.fc2(x)))
         x = self.fc3(x)
 
-        iden = torch.from_numpy(np.eye(self.k).flatten()).float().view(1, self.k * self.k).repeat(
-            batchsize, 1)
+        iden = self.iden_k.repeat(batchsize, 1)
         if x.is_cuda:
             iden = iden.cuda()
         x = x + iden
