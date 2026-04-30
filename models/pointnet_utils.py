@@ -123,13 +123,18 @@ class PointNetEncoder(nn.Module):
 
         pointfeat = x
         x = F.relu(self.bn2(self.conv2(x)))
-        x = self.bn3(self.conv3(x))
-        x = torch.max(x, 2, keepdim=True)[0]
-        x = x.view(-1, 1024)
+        x = self.bn3(self.conv3(x))   # [B, 1024, N]
+
+        x_max = torch.max(x, 2, keepdim=True)[0]   # [B, 1024, 1]
+        x_mean = torch.mean(x, 2, keepdim=True)    # [B, 1024, 1]
+        
+        x = torch.cat([x_max, x_mean], dim=1)      # [B, 2048, 1]
+        x = x.view(-1, 2048)
+        
         if self.global_feat:
             return x, trans, trans_feat
         else:
-            x = x.view(-1, 1024, 1).repeat(1, 1, N)
+            x = x.view(-1, 2048, 1).repeat(1, 1, N)
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
 
