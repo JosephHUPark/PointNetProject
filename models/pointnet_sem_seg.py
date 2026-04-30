@@ -106,4 +106,4 @@ class get_loss(torch.nn.Module):
 if __name__ == '__main__':
     model = get_model(13)
     xyz = torch.rand(12, 3, 2048)
-    (model(xyz))
+    out, _ = model(xyz)
