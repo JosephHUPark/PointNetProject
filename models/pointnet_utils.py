@@ -126,9 +126,9 @@ class PointNetEncoder(nn.Module):
         x = self.bn3(self.conv3(x))   # [B, 1024, N]
 
         x_max = torch.max(x, 2, keepdim=True)[0]   # [B, 1024, 1]
-        x_mean = torch.mean(x, 2, keepdim=True)    # [B, 1024, 1]
+        x_lse = torch.logsumexp(x, 2, keepdim=True)    # [B, 1024, 1]
         
-        x = torch.cat([x_max, x_mean], dim=1)      # [B, 2048, 1]
+        x = torch.cat([x_max, x_lse], dim=1)      # [B, 2048, 1]
         x = x.view(-1, 2048)
         
         if self.global_feat:
