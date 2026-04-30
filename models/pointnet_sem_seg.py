@@ -34,6 +34,7 @@ class get_model(nn.Module):
         B, _, N = x.shape
 
         xyz = x  # keep raw coordinates
+        # x must be raw point cloud: [B, 3, N]
 
         S = 1024
         idx = farthest_point_sampling(xyz, S)  # [B, S]
