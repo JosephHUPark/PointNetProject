@@ -23,6 +23,11 @@ class STN3d(nn.Module):
         self.bn4 = nn.BatchNorm1d(512)
         self.bn5 = nn.BatchNorm1d(256)
 
+        self.register_buffer(
+            "iden",
+            torch.eye(3).view(1, 9).repeat(1, 1)
+        )
+
     def forward(self, x):
         batchsize = x.size()[0]
         x = F.relu(self.bn1(self.conv1(x)))
@@ -35,8 +40,7 @@ class STN3d(nn.Module):
         x = F.relu(self.bn5(self.fc2(x)))
         x = self.fc3(x)
 
-        iden = torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1])).float().view(1, 9).repeat(
-            batchsize, 1)
+        iden = self.iden.repeat(batchsize, 1)
         if x.is_cuda:
             iden = iden.cuda()
         x = x + iden
