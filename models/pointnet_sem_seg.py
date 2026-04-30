@@ -44,7 +44,7 @@ class get_model(nn.Module):
         x, trans, trans_feat = self.feat(x)  # [B, 2112, S]
 
         x = x.transpose(1, 2)  # [B, S, C]
-        x = self.transformer(x)
+        x = self.transformer(x) # will add a lot of time (need GPU to feasibly train)
         x = x.transpose(1, 2)  # [B, C, S]
         
         x = F.relu(self.bn1(self.conv1(x)))   # [B,512,S]
